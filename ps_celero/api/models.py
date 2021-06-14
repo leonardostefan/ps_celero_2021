@@ -10,7 +10,7 @@ class Athlete(models.Model):
     '''
     name = models.CharField(max_length=255)
     sex = models.BooleanField()  # 0 = F , 1 = M
-    birth_year = models.SmallIntegerField()
+    birth_year = models.SmallIntegerField(null=True)
 
     def __str__(self):
         return self.name
@@ -26,7 +26,7 @@ class Games(models.Model):
     '''
     games = models.CharField(max_length=63, primary_key=True)
     season = models.CharField(max_length=63)
-    year = models.SmallIntegerField()
+    year = models.SmallIntegerField(null=True)
     city = models.CharField(max_length=63)
 
     def __str__(self):
@@ -40,9 +40,10 @@ class Event(models.Model):
     sport - Esporte em questão
     games - Jogos olimpicos ao qual ocorreu o evento
     '''
-    event = models.CharField(max_length=63, primary_key=True)
+    event = models.CharField(max_length=63)
     sport = models.CharField(max_length=63)
-    games = models.ForeignKey(Games, on_delete=models.CASCADE)
+    game_id = models.ForeignKey(Games, to_field='games',
+                              on_delete=models.CASCADE)
 
     def __str__(self):
         return self.event
@@ -70,7 +71,7 @@ class Team (models.Model):
     noc - Comitê Olímpico Nacional pertencente
     '''
     name = models.CharField(max_length=63)
-    noc = models.ForeignKey(Noc, on_delete=models.CASCADE)
+    noc_id = models.ForeignKey(Noc, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name
@@ -86,12 +87,12 @@ class AthleteEventStat(models.Model):
     - team  = Time pertencente
     - medal = Medalha recebida, 1 = Ouro, 2 = Prata , 3 = Bronze, 0 = Não Atribuido(N/A), 4+ = Posicionamento/rank na competição
     '''
-    atlhete = models.ForeignKey(Athlete, on_delete=models.CASCADE)
-    height = models.FloatField()
-    weight = models.FloatField()
-    event = models.ForeignKey(Event, on_delete=models.CASCADE)
-    team = models.ForeignKey(Team, on_delete=models.CASCADE)
-    medal = models.SmallIntegerField()
+    atlhete_id = models.ForeignKey(Athlete, on_delete=models.CASCADE)
+    height = models.FloatField(null=True)
+    weight = models.FloatField(null=True)
+    event_id = models.ForeignKey(Event, on_delete=models.CASCADE)
+    team_id = models.ForeignKey(Team, on_delete=models.CASCADE)
+    medal = models.SmallIntegerField(null=True)
     # Inteiros 1 = Ouro, 2 = Prata , 3 = Bronze, 4 = N/A
 
     # TODO: ver uma saida melhor
