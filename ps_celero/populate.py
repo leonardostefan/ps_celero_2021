@@ -1,110 +1,63 @@
-
-
+# Após executar ./rebase.sh 
+# execute 'exec(open(populate.py).read())' dentro de um 'python manage.py shell'
 from os import path
-
-from pandas.core.base import SelectionMixin
-# environ['DJANGO_SETTINGS_MODULE'] = 'ps_celero.settings'
 import api.models as models
-# import csv
+
 import pandas as pd
+import sqlalchemy
+
 from math import isnan
 from tqdm import tqdm
 # exec(open("populate.py").read())
-thisDir = path.abspath('..')
-tpMedal = {"Gold": 1, "Silver": 2, "Bronze": 3}
+thisDir = path.abspath('.')
+filesDir = path.dirname(thisDir)
+dbPath = path.join(thisDir, "db.sqlite3")
 
-# Posição na coluna da tabela
-NOC = 0
-region = 1
-notes = 2
-# Posição na coluna da tabela
-ID = 0
-Name = 1
-Sex = 2
-Age = 3
-Height = 3
-Weight = 4
-Team = 5
-NOC = 6
-Year = 7
-Games = 8
-Season = 9
-City = 10
-Sport = 11
-Event = 12
-Medal = 13
+eng = sqlalchemy.create_engine('sqlite:///'+dbPath, )
 
+print("Lendo Atletas")
+athletesDf = pd.read_csv(path.join(filesDir, 'athlete_events.csv'),)
+print(athletesDf.columns)
+print("Lendo NOCs")
+noc = pd.read_csv(path.join(filesDir, 'noc_regions.csv'))
+print(noc.columns)
 
-def main():
-    print("Lendo Atletas")
-    # file1= open(path.join(thisDir, 'athlete_events.csv'))
-    # athletes = csv.reader(file1)
-    # next(athletes,None)
-    athletes = pd.read_csv(path.join(thisDir, 'athlete_events.csv'),)
-    print(athletes.columns)
-    print("Lendo NOCs")
-    # file2 = open(path.join(thisDir, 'noc_regions.csv'))
-    # noc = csv.reader(file2)
-    # next(noc,None)
-    noc = pd.read_csv(path.join(thisDir, 'noc_regions.csv'))
-    print(noc.columns)
-    print("Inserindo NOCs")
-    for i, row in noc.iterrows():
-        # print("CARAIO")
-        # print (list(row), flush=True)
+print("\nInserindo NOCs")
+noc = models.Noc.DataFrameToModel(noc)
+noc.to_sql("api_noc", eng, if_exists="append", index=False, chunksize=500)
 
-        models.Noc.objects.get_or_create(
-            acronym=row["NOC"],
-            region=row["region"],
-            notes=row["notes"])
-    print("Inserindo Atletas")
-    for i, row in tqdm(athletes.iterrows()):
-        try:
-            sex = False if row["Sex"] == 'F' else True
-            if not isnan(row["Year"])  or not isnan(row["Age"]):
-                bY = -1
-            else:
-                bY = row["Year"] - row["Age"]
+print("Inserindo Times")
+targCol = ["Team", "NOC"]
+teams = athletesDf[targCol].drop_duplicates(targCol)
+teams = models.Team.DataFrameToModel(teams)
+teams.to_sql('api_team', eng, if_exists="append", index=False, chunksize=500)
 
-            athlete = models.Athlete.objects.get_or_create(
-                name=row["Name"],
-                sex=sex,
-                birth_year=bY
-            )
-            game = models.Games.objects.get_or_create(
-                games=row["Games"],
-                season=row["Season"],
-                year=row["Year"],
-                city=row["City"]
-            )
-            event = models.Event.objects.get_or_create(
-                event=row["Event"],
-                sport=row["Sport"],
-                game_id=game[0]
-            )
-            noc = models.Noc.objects.get_or_create(acronym=row["NOC"])
-            noc = models.Noc.objects.get(acronym=row["NOC"])
-            team = models.Team.objects.get_or_create(
-                name=row["Name"],
-                noc_id=noc
-            )
+print("Inserindo games")
+targCol = ["Games", "Season", "Year", "City"]
+games = athletesDf[targCol].drop_duplicates(targCol)
+games = games.drop_duplicates(["Games"])
+games = models.Games.DataFrameToModel(games)
+games.to_sql('api_games', eng, if_exists="append", index=False, chunksize=500)
+
+print("Inserindo events")
+targCol = ["Event", "Sport", "Games"]
+events = athletesDf[targCol].drop_duplicates(targCol)
+events = models.Event.DataFrameToModel(events)
+events.to_sql('api_event', eng, if_exists="append", index=False, chunksize=500)
 
 
-            # Define medalha
-            medal = tpMedal[row["Medal"]] if row["Medal"] in tpMedal else 0
-            athleteEventStat = models.AthleteEventStat.objects.get_or_create(
+print("Inserindo athletes")
+targCol = ["ID", "Name", "Sex", "Age", "Year"]
+athletes = athletesDf[targCol].drop_duplicates(targCol)
+athletes = models.Athlete.DataFrameToModel(athletes)
+athletes = athletes.drop_duplicates(["id"])
+athletes[['id', 'name', 'sex', 'birth_year']].to_sql(
+    'api_athlete', eng, if_exists="append", index=False, chunksize=500)
 
-                atlhete_id=athlete[0],
-                height=row["Height"],
-                weight=row["Weight"],
-                event_id=event[0],
-                team_id=team[0],
-                medal=medal
-            )   
-        except Exception as e:
-            print('\n\033[31mERRO:\033[39m')
-            print("\tLinha:\n",row)
-            print(str(e))
-            # print(traceback.format_exc(), '\n')
 
-main()
+print("Inserindo atlhetEvent")
+targCol = ["ID", "Height", "Weight", "Event", "Team", "Medal"]
+atlhetEvent = athletesDf[targCol].drop_duplicates(targCol)
+atlhetEvent = models.AthleteEventStat.DataFrameToModel(atlhetEvent)
+atlhetEvent.to_sql('api_athleteeventstat', eng,
+                   if_exists="append", index=False, chunksize=500)
