@@ -1,4 +1,4 @@
-# Após executar ./rebase.sh 
+# Após executar ./rebase.sh
 # execute 'exec(open("populate.py").read())' dentro de um 'python manage.py shell'
 from os import path
 import api.models as models
@@ -26,12 +26,6 @@ print("\nInserindo NOCs")
 noc = models.Noc.DataFrameToModel(noc)
 noc.to_sql("api_noc", eng, if_exists="append", index=False, chunksize=500)
 
-print("Inserindo Times")
-targCol = ["Team"]
-teams = athletesDf[targCol].drop_duplicates(targCol)
-teams = models.Team.DataFrameToModel(teams)
-teams.to_sql('api_team', eng, if_exists="append", index=False, chunksize=500)
-
 print("Inserindo games")
 targCol = ["Games", "Season", "Year", "City"]
 games = athletesDf[targCol].drop_duplicates(targCol)
@@ -56,7 +50,7 @@ athletes[['id', 'name', 'sex', 'birth_year']].to_sql(
 
 
 print("Inserindo atlhetEvent")
-targCol = ["ID", "Height", "Weight", "Event", "Team", "Medal"]
+targCol = ["ID", "Height", "Weight", "Event", "Team", "Medal", "NOC"]
 atlhetEvent = athletesDf[targCol].drop_duplicates(targCol)
 atlhetEvent = models.AthleteEventStat.DataFrameToModel(atlhetEvent)
 atlhetEvent.to_sql('api_athleteeventstat', eng,
