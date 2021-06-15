@@ -34,7 +34,6 @@ class Athlete(models.Model):
         Saida
             Dataframe formatado. Nenhuma linha ou coluna é excluida, apenas modificado.
         '''
-
         df = df.rename(Athlete.originalMap(), axis=1)
         df.loc[:, 'id'] = df.loc[:, 'id'].apply(lambda x: int(x))
 
@@ -91,6 +90,7 @@ class Event(models.Model):
     sport - Esporte em questão
     gameId - Jogos olimpicos ao qual ocorreu o evento
     '''
+    id = models.CharField(max_length=127, primary_key=True)
     event = models.CharField(max_length=63)
     sport = models.CharField(max_length=63)
     gameId = models.ForeignKey(Games, to_field='games',
@@ -116,6 +116,7 @@ class Event(models.Model):
             Dataframe formatado. Nenhuma linha ou coluna é excluida, apenas modificado.
         '''
         df = df.rename(Event.originalMap(), axis=1)
+        df['id'] = df['gameId_id']+':'+df['event']
         return df
 
 
@@ -156,20 +157,16 @@ class Noc(models.Model):
 class Team (models.Model):
     '''
     Equipes existentes:
-    name - nome da equipe 
-    nocId - Comitê Olímpico Nacional pertencente
+    team - nome da equipe 
     '''
-    team = models.CharField(max_length=63)
-    nocId = models.ForeignKey(Noc, on_delete=models.CASCADE)
+    team = models.CharField(max_length=63, primary_key=True)
 
     def __str__(self):
-        return self.name
+        return self.team
 
     def originalMap():
         rn = {
-            'Team': 'team',
-            'NOC': 'nocId_id'
-        }
+            'Team': 'team', }
         return rn
 
     def DataFrameToModel(df: pd.DataFrame) -> pd.DataFrame:
@@ -203,8 +200,9 @@ class AthleteEventStat(models.Model):
     # Inteiros 1 = Ouro, 2 = Prata , 3 = Bronze, 4 = N/A
 
     # TODO: ver uma saida melhor
-    def __str__(self):
-        return self.atlhete
+    def __str__(self):    
+        r = str("athlete: {}; medal: {}º").format(self.atlheteId, self.medal)
+        return (r)
 
     def originalMap():
         rn = {
