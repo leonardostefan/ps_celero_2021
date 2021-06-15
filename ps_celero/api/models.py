@@ -154,33 +154,6 @@ class Noc(models.Model):
         return df
 
 
-class Team (models.Model):
-    '''
-    Equipes existentes:
-    team - nome da equipe 
-    '''
-    team = models.CharField(max_length=63, primary_key=True)
-
-    def __str__(self):
-        return self.team
-
-    def originalMap():
-        rn = {
-            'Team': 'team', }
-        return rn
-
-    def DataFrameToModel(df: pd.DataFrame) -> pd.DataFrame:
-        '''
-        Metodo de conversão do modelo do CSV para a estrutura de dados definidas na API
-        Entrada:
-            df = Dataframe com as colunas a serem formatadas
-        Saida
-            Dataframe formatado. Nenhuma linha ou coluna é excluida, apenas modificado.
-        '''
-        df = df.rename(Team.originalMap(), axis=1)
-        return df
-
-
 class AthleteEventStat(models.Model):
     '''
     Definições/estatisticas do Atleta no evento:
@@ -188,19 +161,21 @@ class AthleteEventStat(models.Model):
     - height = Altura do atleta em centimetros
     - weight  = Altura do atleta em Kg
     - eventId = ID Evento em questão
-    - teamId  = ID Time pertencente
+    - team  = Time pertencente
     - medal = Medalha recebida, 1 = Ouro, 2 = Prata , 3 = Bronze, 0 = Não Atribuido(N/A), 4+ = Posicionamento/rank na competição
+    - nocId = Comitê Olímpico Nacional
     '''
     atlheteId = models.ForeignKey(Athlete, on_delete=models.CASCADE)
     height = models.FloatField(null=True)
     weight = models.FloatField(null=True)
     eventId = models.ForeignKey(Event, on_delete=models.CASCADE)
-    teamId = models.ForeignKey(Team, on_delete=models.CASCADE)
+    team = models.CharField(max_length=63, null=True)
     medal = models.SmallIntegerField(null=True)
+    noc = models.ForeignKey(Noc, on_delete=models.CASCADE)
     # Inteiros 1 = Ouro, 2 = Prata , 3 = Bronze, 4 = N/A
 
     # TODO: ver uma saida melhor
-    def __str__(self):    
+    def __str__(self):
         r = str("athlete: {}; medal: {}º").format(self.atlheteId, self.medal)
         return (r)
 
@@ -210,8 +185,9 @@ class AthleteEventStat(models.Model):
             'Height': 'height',
             'Weight': 'weight',
             'Event': 'eventId_id',
-            'Team': 'teamId_id',
-            'Medal': 'medal'
+            'Team': 'team',
+            'Medal': 'medal',
+            'NOC': 'nocId'
         }
         return rn
 
