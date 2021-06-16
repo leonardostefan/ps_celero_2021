@@ -50,8 +50,8 @@ athletes[['id', 'name', 'sex', 'birth_year']].to_sql(
 
 
 print("Inserindo atlhetEvent")
-targCol = ["ID", "Height", "Weight", "Event", "Team", "Medal", "NOC"]
+targCol = ["ID", "Height", "Weight", "Event","Games", "Team", "Medal", "NOC"]
 atlhetEvent = athletesDf[targCol].drop_duplicates(targCol)
 atlhetEvent = models.AthleteEventStat.DataFrameToModel(atlhetEvent)
-atlhetEvent.to_sql('api_athleteeventstat', eng,
-                   if_exists="append", index=False, chunksize=500)
+atlhetEvent.drop("Games", axis =1).to_sql('api_athleteeventstat', eng,
+                   if_exists="append", index=False, chunksize=1000)
