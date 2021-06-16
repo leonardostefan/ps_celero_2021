@@ -97,7 +97,7 @@ class Event(models.Model):
                                on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.event
+        return self.id
 
     def originalMap():
         rn = {
@@ -171,7 +171,7 @@ class AthleteEventStat(models.Model):
     eventId = models.ForeignKey(Event, on_delete=models.CASCADE)
     team = models.CharField(max_length=63, null=True)
     medal = models.SmallIntegerField(null=True)
-    noc = models.ForeignKey(Noc, on_delete=models.CASCADE)
+    nocId = models.ForeignKey(Noc, on_delete=models.CASCADE)
     # Inteiros 1 = Ouro, 2 = Prata , 3 = Bronze, 4 = N/A
 
     # TODO: ver uma saida melhor
@@ -187,7 +187,7 @@ class AthleteEventStat(models.Model):
             'Event': 'eventId_id',
             'Team': 'team',
             'Medal': 'medal',
-            'NOC': 'nocId'
+            'NOC': 'nocId_id'
         }
         return rn
 
@@ -204,4 +204,6 @@ class AthleteEventStat(models.Model):
         df = df.rename(AthleteEventStat.originalMap(), axis=1)
         df.loc[:, 'medal'] = df.loc[:, 'medal'].apply(
             lambda x: tpMedal[x]if x in tpMedal else 0)
+        df['eventId_id'] = df['Games']+':'+df['eventId_id']
+
         return df

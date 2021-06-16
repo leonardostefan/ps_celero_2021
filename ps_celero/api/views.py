@@ -66,7 +66,6 @@ def updateAthlete(request, id):
     payload = json.loads(request.body)
     try:
         athlete_item = Athlete.objects.filter(id=id)
-        
         athlete_item.update(**payload)
         athlete = Athlete.objects.get(id=id)
         serializer = AthleteSerializaer(athlete)
@@ -123,24 +122,11 @@ def getEvents(request):
 
 @ api_view(["GET"])
 @ csrf_exempt
-def getAthleteEventById(request,id):
+def getAthleteEventById(request, id):
     athleteevent = AthleteEventStat.objects.get(id=id)
     serializer = AthleteEventStatSerializaer(athleteevent, many=False)
-    result = serializer.data
-    if 'full_tree'  in request.GET:
-        event = Event.objects.get(event=athleteevent.event)
-        game = Games.objects.get(game =event.gameId)
-        athlete = Athlete.objects.get(id=athleteevent.atlheteId)
-        noc = Noc.objects.get(acronym=athleteevent.noc)
-        pass
-    
-    
-
-
-    return JsonResponse({'events': serializer.data}, safe=False, status=status.HTTP_200_OK)
-
-
-
+    result = {"athlete_event": serializer.data}
+    return JsonResponse(result, safe=False, status=status.HTTP_200_OK)
 
 
 # ------------------------------------
@@ -153,27 +139,3 @@ def getGames(request):
     return JsonResponse({'games_list': serializer.data}, safe=False, status=status.HTTP_200_OK)
 
 
-# ------------------------------------
-# Referente aos eventos
-@ api_view(["GET"])
-@ csrf_exempt
-def getAthlete(request):
-    athlete = Athlete.objects.filter(name=request.data.name)
-    serializer = AthleteSerializaer(athlete, many=True)
-    return JsonResponse({'athletes': serializer.data}, safe=False, status=status.HTTP_200_OK)
-
-
-# @api_view(["GET"])
-# @csrf_exempt
-# def getAthlete(request):
-#     athlete = Athlete.objects.filter(name=request.data.name)
-#     serializer = AthleteSerializaer(athlete, many=True)
-#     return JsonResponse({'athletes': serializer.data}, safe=False, status=status.HTTP_200_OK)
-
-
-# @api_view(["GET"])
-# @csrf_exempt
-# def getAthlete(request):
-#     athlete = Athlete.objects.filter(name=request.data.name)
-#     serializer = AthleteSerializaer(athlete, many=True)
-#     return JsonResponse({'athletes': serializer.data}, safe=False, status=status.HTTP_200_OK)
